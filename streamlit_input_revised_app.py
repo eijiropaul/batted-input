@@ -138,7 +138,7 @@ with col2:
         x, y = marker["x_coord"], marker["y_coord"]
         shape = HIT_TYPE_SHAPES.get(marker["hit_type"], "ellipse")
         color = PITCH_TYPE_COLORS.get(marker["pitch_type"], "gray")
-        draw_shape(draw, shape, x, y, 15, color)
+        draw_shape(draw, shape, x, y, 20, color)
 
     st.image(img_with_plot)
 
