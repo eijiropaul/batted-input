@@ -6,6 +6,7 @@ import glob
 from streamlit_image_coordinates import streamlit_image_coordinates
 import csv
 import io
+import uuid
 
 # --- 定数と定義 ---
 BASEBALL_FIELD_IMG = "baseballfield.jpg"
@@ -33,6 +34,8 @@ if "marker_data" not in st.session_state:
     st.session_state.marker_data = []
 if "last_click_coords" not in st.session_state:
     st.session_state.last_click_coords = None
+if "skip_next_click" not in st.session_state:
+    st.session_state.skip_next_click = False  # ← 新規追加
 
 
 # --- ヘルパー関数 ---
@@ -94,6 +97,8 @@ with col1:
     pitcherLR = st.selectbox("対右or対左", ["右", "左"])
     runners = st.selectbox("塁状況", ["なし", "1塁", "得点圏"])
     strikes = st.selectbox("ストライク", [0, 1, 2])
+    pitch_course = st.selectbox("コース", ["内", "真中", "外"])
+    pitch_height = st.selectbox("高さ", ["低め", "真中", "高め"])
     pitch_type = st.selectbox("球種", list(PITCH_TYPE_COLORS.keys()))
     hit_type = st.selectbox("打球性質/結果", list(HIT_TYPE_SHAPES.keys()))
 
@@ -110,20 +115,27 @@ with col2:
         x, y = value["x"], value["y"]
         current_coords = (x, y)
 
-        # 前回と異なるクリックなら処理（同じなら無視）
-        if current_coords != st.session_state.last_click_coords:
+        # 直前に削除された場合はスキップ
+        if st.session_state.skip_next_click:
+            st.session_state.skip_next_click = False
+
+        # すでに登録されている座標と同じ場合はスキップ（重複防止）
+        elif current_coords not in st.session_state.click_coords:
             st.session_state.last_click_coords = current_coords
             st.session_state.click_coords.append(current_coords)
 
             st.session_state.marker_data.append(
                 {
+                    "id": str(uuid.uuid4()),  # ユニークID
                     "team_name": selected_team_file,
                     "player_name": selected_player,
                     "opponents": opponents,
                     "pitcherLR": pitcherLR,
                     "runners": runners,
                     "strikes": strikes,
+                    "pitch_course": pitch_course,
                     "pitch_type": pitch_type,
+                    "pitch_height": pitch_height,
                     "hit_type": hit_type,
                     "x_coord": x,
                     "y_coord": y,
@@ -145,8 +157,32 @@ with col2:
     # マーカー一覧
     if st.session_state.marker_data:
         st.subheader("入力済みデータ一覧")
-        df = pd.DataFrame(st.session_state.marker_data)
-        st.dataframe(df)
+
+    delete_target_id = None  # ← ループ外に定義
+
+    for i, marker in enumerate(st.session_state.marker_data):
+        marker_id = marker["id"]
+        cols = st.columns([8, 2])
+        with cols[0]:
+            st.markdown(
+                f"**{i+1}.** チーム: {marker['team_name']} | 選手: {marker['player_name']} | "
+                f"球種: {marker['pitch_type']} | 打球: {marker['hit_type']} | 座標: ({marker['x_coord']}, {marker['y_coord']})"
+            )
+        with cols[1]:
+            if st.button("削除", key=f"delete_{marker_id}"):
+                delete_target_id = marker_id
+
+    # --- 削除処理はループ外に1回だけ実行する ---
+    if delete_target_id:
+        st.session_state.marker_data = [
+            m for m in st.session_state.marker_data if m["id"] != delete_target_id
+        ]
+        st.session_state.click_coords = [
+            (m["x_coord"], m["y_coord"]) for m in st.session_state.marker_data
+        ]
+        st.session_state.last_click_coords = None
+        st.session_state.skip_next_click = True
+        st.rerun()
 
     # CSV出力処理
     if prepare_button:
@@ -154,10 +190,15 @@ with col2:
             output = io.BytesIO()
             text_wrapper = io.TextIOWrapper(output, encoding="cp932", newline="")
             writer = csv.DictWriter(
-                text_wrapper, fieldnames=list(st.session_state.marker_data[0].keys())
+                text_wrapper,
+                fieldnames=[
+                    k for k in st.session_state.marker_data[0].keys() if k != "id"
+                ],
             )
             writer.writeheader()
-            writer.writerows(st.session_state.marker_data)
+            for row in st.session_state.marker_data:
+                row_to_save = {k: v for k, v in row.items() if k != "id"}
+                writer.writerow(row_to_save)
             text_wrapper.flush()  # ← これが重要！
             output.seek(0)
             csv_data = output.read()  # バイト列を読む
