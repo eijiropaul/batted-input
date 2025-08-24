@@ -70,7 +70,7 @@ except FileNotFoundError:
 # 2カラムレイアウト
 col1, col2 = st.columns([1, 2])
 
-# col1: 操作パネル
+# --- col1: 操作パネル ---
 with col1:
     st.header("操作パネル")
 
@@ -80,11 +80,23 @@ with col1:
     selected_team_file = st.selectbox("チームを選択", team_files)
 
     selected_player = None
+    selected_player_batLR = None  # ← 打者の左右を格納
+
     if selected_team_file:
         try:
+            # CSVは 「名前, 打者左右」 の2列想定
             roster_df = pd.read_csv(selected_team_file, encoding="cp932", header=None)
-            player_list = roster_df.iloc[:, 0].tolist()
+
+            # 例: 1列目=名前, 2列目=打者左右
+            player_dict = dict(zip(roster_df.iloc[:, 0], roster_df.iloc[:, 1]))
+
+            # UIでは名前だけ表示
+            player_list = list(player_dict.keys())
             selected_player = st.selectbox("選手を選択", player_list)
+
+            if selected_player:
+                selected_player_batLR = player_dict[selected_player]  # ← 打者左右を取得
+
         except Exception as e:
             st.error(f"{selected_team_file}の読み込みに失敗しました: {e}")
 
@@ -129,6 +141,7 @@ with col2:
                     "id": str(uuid.uuid4()),  # ユニークID
                     "team_name": selected_team_file,
                     "player_name": selected_player,
+                    "player_batLR": selected_player_batLR,  # ← 追加！
                     "opponents": opponents,
                     "pitcherLR": pitcherLR,
                     "runners": runners,
