@@ -107,6 +107,28 @@ with col1:
 
     opponents = st.selectbox("対戦相手", ["京大以外", "京大"])
     pitcherLR = st.selectbox("対右or対左", ["右", "左"])
+    pitchername = st.selectbox(
+        "投手名(京大)",
+        [
+            "なし",
+            "玉越",
+            "平木",
+            "櫛田",
+            "菅野",
+            "永田",
+            "白石",
+            "宮﨑",
+            "渚",
+            "谷村",
+            "武村",
+            "朽網",
+            "木村",
+            "高山",
+            "堀川",
+            "蓮香",
+            "窪",
+        ],
+    )
     runners = st.selectbox("塁状況", ["なし", "1塁", "得点圏"])
     strikes = st.selectbox("ストライク", [0, 1, 2])
     pitch_course = st.selectbox("コース", ["内", "真中", "外"])
@@ -144,6 +166,7 @@ with col2:
                     "player_batLR": selected_player_batLR,  # ← 追加！
                     "opponents": opponents,
                     "pitcherLR": pitcherLR,
+                    "pitchername": pitchername,
                     "runners": runners,
                     "strikes": strikes,
                     "pitch_course": pitch_course,
