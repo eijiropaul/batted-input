@@ -231,7 +231,12 @@ with col2:
 
     # CSV出力処理
     if prepare_button:
-        if selected_team_file and selected_player and st.session_state.marker_data:
+        # ✅ OP戦でもダウンロード可能に
+        if (
+            selected_team_file
+            and (selected_player or selected_team_file == "OP戦")
+            and st.session_state.marker_data
+        ):
             output = io.BytesIO()
             text_wrapper = io.TextIOWrapper(output, encoding="cp932", newline="")
             writer = csv.DictWriter(
@@ -244,9 +249,9 @@ with col2:
             for row in st.session_state.marker_data:
                 row_to_save = {k: v for k, v in row.items() if k != "id"}
                 writer.writerow(row_to_save)
-            text_wrapper.flush()  # ← これが重要！
+            text_wrapper.flush()
             output.seek(0)
-            csv_data = output.read()  # バイト列を読む
+            csv_data = output.read()
 
             st.success("データ準備が完了しました！")
             st.download_button(
@@ -256,4 +261,4 @@ with col2:
                 mime="text/csv",
             )
     else:
-        st.warning("チームと選手を選択し、マーカーを追加してください。")
+        st.warning("チームまたは打球マーカーが未入力です。")
