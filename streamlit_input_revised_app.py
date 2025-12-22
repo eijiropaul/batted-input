@@ -110,9 +110,9 @@ with col1:
         st.session_state.marker_data = []
         st.session_state.last_click_coords = None
 
-    opponents = st.selectbox("対戦相手", ["京大以外", "京大"])
-    pitcherLR = st.selectbox("対右or対左", ["右", "左"])
-    pitchername = st.selectbox(
+    opponents = st.radio("対戦相手", ["京大以外", "京大"], horizontal=True)
+    pitcherLR = st.radio("対右or対左", ["右", "左"], horizontal=True)
+    pitchername = st.radio(
         "投手名(京大)",
         [
             "なし",
@@ -133,13 +133,15 @@ with col1:
             "蓮香",
             "窪",
         ],
+        horizontal=True,
     )
-    runners = st.selectbox("塁状況", ["なし", "1塁", "得点圏"])
-    strikes = st.selectbox("ストライク", [0, 1, 2])
-    pitch_course = st.selectbox("コース", ["内", "真中", "外"])
-    pitch_height = st.selectbox("高さ", ["低め", "真中", "高め"])
-    pitch_type = st.selectbox("球種", list(PITCH_TYPE_COLORS.keys()))
-    hit_type = st.selectbox("打球性質/結果", list(HIT_TYPE_SHAPES.keys()))
+    runners = st.radio("塁状況", ["なし", "1塁", "得点圏"], horizontal=True)
+    strikes = st.radio("ストライク", [0, 1, 2], horizontal=True)
+    pitch_course = st.radio("コース", ["内", "真中", "外"], horizontal=True)
+    pitch_height = st.radio("高さ", ["低め", "真中", "高め"], horizontal=True)
+    pitch_type = st.radio("球種", list(PITCH_TYPE_COLORS.keys()), horizontal=True)
+    hit_type = st.radio("打球性質/結果", list(HIT_TYPE_SHAPES.keys()), horizontal=True)
+    hit_rank = st.radio("打球ランク", ["A", "B", "C"], horizontal=True)
 
     prepare_button = st.button("データダウンロードの準備")
 
@@ -182,6 +184,7 @@ with col2:
                     "pitch_type": pitch_type,
                     "pitch_height": pitch_height,
                     "hit_type": hit_type,
+                    "hit_rank": hit_rank,
                     "x_coord": x,
                     "y_coord": y,
                 }
