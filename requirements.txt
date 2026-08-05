@@ -1,5 +1,9 @@
-streamlit
-plotly
+streamlit==1.29.0
+streamlit-image-coordinates==0.1.6
 pandas
+numpy
 Pillow
-streamlit-image-coordinates
+matplotlib
+statsmodels.api
+statsmodels.formula.api
+matplotlib.pyplot
