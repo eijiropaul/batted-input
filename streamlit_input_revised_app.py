@@ -3,8 +3,7 @@ import pandas as pd
 from PIL import Image, ImageDraw
 import os
 import glob
-import plotly.graph_objects as go
-from streamlit_plotly_events import plotly_events
+from streamlit_image_coordinates import streamlit_image_coordinates
 import csv
 import io
 import uuid
@@ -79,24 +78,31 @@ with col1:
     all_csv_files = glob.glob("*.csv")
     team_files = sorted([f for f in all_csv_files if not f.endswith("_data.csv")])
 
-    team_options = team_files
+    # ✅ 「OP戦」を追加
+    team_options = team_files + ["OP戦"]
     selected_team_file = st.selectbox("チームを選択", team_options)
 
     selected_player = None
     selected_player_batLR = None
 
-    try:
-        roster_df = pd.read_csv(selected_team_file, encoding="cp932", header=None)
-        player_dict = dict(zip(roster_df.iloc[:, 0], roster_df.iloc[:, 1]))
+    # --- 通常のチーム選択時 ---
+    if selected_team_file and selected_team_file != "OP戦":
+        try:
+            roster_df = pd.read_csv(selected_team_file, encoding="cp932", header=None)
+            player_dict = dict(zip(roster_df.iloc[:, 0], roster_df.iloc[:, 1]))
 
-        player_list = list(player_dict.keys())
-        selected_player = st.selectbox("選手を選択", player_list)
+            player_list = list(player_dict.keys())
+            selected_player = st.selectbox("選手を選択", player_list)
 
-        if selected_player:
-            selected_player_batLR = player_dict[selected_player]
+            if selected_player:
+                selected_player_batLR = player_dict[selected_player]
 
-    except Exception as e:
-        st.error(f"{selected_team_file}の読み込みに失敗しました: {e}")
+        except Exception as e:
+            st.error(f"{selected_team_file}の読み込みに失敗しました: {e}")
+
+    # --- OP戦選択時 ---
+    elif selected_team_file == "OP戦":
+        st.info("※OP戦モードです。選手入力は不要です。")
 
     # --- 共通設定 ---
     if st.button("マーカーをクリア"):
@@ -127,10 +133,6 @@ with col1:
             "蓮香",
             "窪",
             "南光",
-            "吉満",
-            "益田",
-            "高橋",
-            "髙田",
         ],
         horizontal=True,
     )
@@ -149,37 +151,7 @@ with col2:
     st.header("打球位置")
     st.write("打球位置をクリックしてください")
 
-    # --- Plotlyで画像表示＆クリック取得 ---
-    fig = go.Figure()
-
-    fig.add_layout_image(
-        dict(
-            source=base_img,
-            x=0,
-            y=0,
-            sizex=750,
-            sizey=750,
-            xref="x",
-            yref="y",
-            sizing="stretch",
-            layer="below",
-        )
-    )
-
-    fig.update_xaxes(range=[0, 750], visible=False)
-    fig.update_yaxes(range=[750, 0], visible=False)
-
-    fig.update_layout(width=750, height=750, margin=dict(l=0, r=0, t=0, b=0))
-
-    selected_points = plotly_events(
-        fig,
-        click_event=True,
-        hover_event=False,
-    )
-
-    value = None
-    if selected_points:
-        value = {"x": int(selected_points[0]["x"]), "y": int(selected_points[0]["y"])}
+    value = streamlit_image_coordinates(base_img, key="input_image")
 
     if (
         value
