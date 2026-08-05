@@ -1,8 +1,7 @@
 streamlit==1.29.0
-streamlit-image-coordinates==0.1.6
+plotly==5.18.0
+streamlit-plotly-events==0.0.6
 pandas==1.5.3
 numpy==1.24.4
 Pillow==9.5.0
 matplotlib==3.7.1
-plotly==5.18.0
-streamlit-plotly-events==0.0.6
