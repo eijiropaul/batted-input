@@ -3,7 +3,8 @@ import pandas as pd
 from PIL import Image, ImageDraw
 import os
 import glob
-from streamlit_image_coordinates import streamlit_image_coordinates
+import plotly.graph_objects as go
+from streamlit_plotly_events import plotly_events
 import csv
 import io
 import uuid
@@ -84,9 +85,8 @@ with col1:
     selected_player = None
     selected_player_batLR = None
 
-    
     try:
-        roster_df = pd.read_csv(selected_team_file,encoding="cp932", header=None)
+        roster_df = pd.read_csv(selected_team_file, encoding="cp932", header=None)
         player_dict = dict(zip(roster_df.iloc[:, 0], roster_df.iloc[:, 1]))
 
         player_list = list(player_dict.keys())
@@ -130,7 +130,7 @@ with col1:
             "吉満",
             "益田",
             "高橋",
-            "髙田"
+            "髙田",
         ],
         horizontal=True,
     )
@@ -149,7 +149,37 @@ with col2:
     st.header("打球位置")
     st.write("打球位置をクリックしてください")
 
-    value = streamlit_image_coordinates(base_img, key="input_image")
+    # --- Plotlyで画像表示＆クリック取得 ---
+    fig = go.Figure()
+
+    fig.add_layout_image(
+        dict(
+            source=base_img,
+            x=0,
+            y=0,
+            sizex=750,
+            sizey=750,
+            xref="x",
+            yref="y",
+            sizing="stretch",
+            layer="below",
+        )
+    )
+
+    fig.update_xaxes(range=[0, 750], visible=False)
+    fig.update_yaxes(range=[750, 0], visible=False)
+
+    fig.update_layout(width=750, height=750, margin=dict(l=0, r=0, t=0, b=0))
+
+    selected_points = plotly_events(
+        fig,
+        click_event=True,
+        hover_event=False,
+    )
+
+    value = None
+    if selected_points:
+        value = {"x": int(selected_points[0]["x"]), "y": int(selected_points[0]["y"])}
 
     if (
         value
